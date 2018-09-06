@@ -1,0 +1,7 @@
+- name: Install python 2 + 3
+  become: true
+  pacman: pkg={{ item }} state=installed update_cache=true
+  with_items:
+  - python3
+  - python2
+  - python2-pip

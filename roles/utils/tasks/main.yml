@@ -1,0 +1,10 @@
+---
+- name: Install utils
+  become: yes
+  pacman: name:{{ item }} update_cache=yes state=latest
+  with_items:
+    - vim
+    - htop
+    - git
+    - zsh
+...

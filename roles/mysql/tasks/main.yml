@@ -1,32 +1,43 @@
-- name: Add the repository for MySql 5.6
-  become: yes
-  command: add-apt-repository 'deb http://archive.ubuntu.com/ubuntu trusty universe'
-
-- name: Update
-  become: yes
-  command: apt-get update
-
 - name: Install mysql
-  apt: pkg={{ item }} state=installed
+  pacman: pkg={{ item }} state=installed update_cache=yes
   become: true
-  with_items:    
-    - mysql-server-5.6
-    - mysql-client-5.6
-    - python-mysqldb
-    - libmysqlclient-dev
-
-- name : Ensure mysql started
+  with_items:
+    - mysql
+    - mysql-python
+    
+- name: Install mysql
+  shell: pip2 install {{ item }}
+  become: true
+  with_items:
+    - ConfigParser
+    - MySQL-python
+    
+- name: Stop mariadb service if started
   become: yes
-  service: name=mysql state=started enabled=yes
+  service:
+    name: mariadb
+    state: stopped
+- name: Config mariadb tables
+  become: yes
+  shell: /usr/bin/mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
+
+- name: Ensure mysql started
+  become: yes
+  service: name=mariadb state=started enabled=yes
 
 - name: Update MySQL root password for all root accounts
-  mysql_user: name=root 
-              host={{ item }} 
-              password={{ mysql_root_password }}
-              login_user=root
-              login_password=""
-              state=present
+  mysql_user: 
+    name: root
+    host: "{{ item }}"
+    password: "{{ mysql_root_password }}"
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    check_implicit_admin: yes
+    priv: "*.*:ALL,GRANT"
   with_items:
     - 127.0.0.1
     - ::1
     - localhost
+  
+  
+  
